@@ -81,8 +81,33 @@ The trained agent policy will be included in the `results/name` (`name` has to b
 - `best_model.zip`: Stable Baselines3 PPO agent.
 - `final_model.zip`: Final checkpoint after training.
 
-**Some results of the actual trained agent policy:**
+**Evaluation Results of the Trained Agent Policy (Trajectoryresults):**
 
+Below are visual results (GIFs) of the agent's performance in different trajectory scenarios:
+
+1. **Random Point Reach**
+   
+   ![Random Point](gym_pybullet_drones/assets/randomrecgif.gif)
+
+2. **Random Points & Hover**
+   
+   ![Random and Hover](gym_pybullet_drones/assets/random_and_hoverrecgif.gif)
+
+3. **Square Trajectory**
+   
+   ![Square Trajectory](gym_pybullet_drones/assets/squarerecgif.gif)
+
+4. **Circle Trajectory**
+   
+   ![Circle Trajectory](gym_pybullet_drones/assets/circlerecgif.gif)
+
+5. **Helix Trajectory**
+   
+   ![Helix Trajectory](gym_pybullet_drones/assets/helixrecgif.gif)
+
+**How to Use:**
+- Place the trained model in `results/name/`.
+- Run `evaluation.py` to visualize and analyze performance in the selected environment.
 
 ---
 
