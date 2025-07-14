@@ -78,7 +78,7 @@ def _draw_target_text(env):
 
 def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_GUI, plot=True, colab=DEFAULT_COLAB, record_video=DEFAULT_RECORD_VIDEO, local=True):
 
-    filename = os.path.join(output_folder + '/Trajectoryresultsv8',) # Name of the folder where your trained policy have been saved
+    filename = os.path.join(output_folder + '/Trajectoryresults',) # Name of the folder where your trained policy have been saved (same as learn.py)
     if not os.path.exists(filename):
         os.makedirs(filename+'/')
 

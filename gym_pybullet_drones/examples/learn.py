@@ -36,7 +36,7 @@ DEFAULT_ACT = ActionType('rpm')
 
 DEFAULT_AGENTS = 1 # Number of agents in the environment
 DEFAULT_MA = False
-ENVIRONMENT = RandomPointAviary # Environment to use
+ENVIRONMENT = RandomPointAviary # Environment for training agent
 N_ENVS = 10 # Number of parallel environments                 
 
 def run(output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_GUI, plot=True, colab=DEFAULT_COLAB, record_video=DEFAULT_RECORD_VIDEO, local=True):
