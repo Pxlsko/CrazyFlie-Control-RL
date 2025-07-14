@@ -87,7 +87,7 @@ Below are visual results (GIFs) of the agent's performance in different trajecto
 
 1. **Random Point Reach**
    
-   ![Random Point](gym_pybullet_drones/assets/randomrecgif.gif)
+   ![Random Point](CrazyFlie-Control-RL/gym_pybullet_drones/assets/randomrecgif.gif)
 
 2. **Random Points & Hover**
    
