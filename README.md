@@ -101,7 +101,7 @@ tensorboard --logdir = results\Trajectoryresults\tb # or where you have saved yo
 
 ## 📚 References
 
-- [Gympybulletdrones] (https://github.com/utiasDSL/gym-pybullet-drones.git)
+- [Gym-pybullet-drones] (https://github.com/utiasDSL/gym-pybullet-drones.git)
 - [PyBullet](https://github.com/bulletphysics/bullet3/)
 - [Stable Baselines3](https://github.com/hill-a/stable-baselines)
 - [Anaconda](https://www.anaconda.com/)
