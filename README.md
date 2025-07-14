@@ -9,9 +9,9 @@ A modular framework for reinforcement learning-based control of CrazyFlie drones
 ```
 gym_pybullet_drones/
 │
-├── assets/                # Drone models, trajectories, trained agent (to be added)
+├── assets/                # Drone models, trajectories, etc
 ├── envs/                  # Custom Gymnasium environments
-├── control/               # Control algorithms (PID, RL, etc.)
+├── control/               # Control (PID)
 ├── utils/                 # Logging, plotting, and helper functions
 ├── examples/              # Training and evaluation scripts
 └── README.md
