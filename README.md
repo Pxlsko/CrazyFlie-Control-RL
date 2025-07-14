@@ -23,7 +23,7 @@ gym_pybullet_drones/
 
 ### 1. Installation
 
-Clone the repository and install dependencies:
+Clone the repository and install the dependencies:
 
 ```sh
 git clone https://github.com/Pxlsko/CrazyFlie-Control-RL.git
@@ -38,20 +38,19 @@ pip install -e .
 
 ### 2. Training an Agent
 
-To train a reinforcement learning agent:
+To train a reinforcement learning agent, run:
 
 ```sh
 cd gym_pybullet_drones/examples
 python learn.py
 ```
 
-- Training parameters and environments can be adjusted in `learn.py`.
+- You can adjust training parameters and environments in `learn.py`.
 - The trained agent will be saved in the `results/name` folder.
-
 
 ### 3. Evaluating a Trained Agent
 
-To evaluate a trained policy:
+To evaluate a trained policy, run:
 
 ```sh
 cd gym_pybullet_drones/examples
@@ -59,14 +58,14 @@ python evaluation.py
 ```
 
 - The script loads the agent from `results/` and runs it in the selected environment.
-- Results and plots will show up at the end of the simulation and saved in the path that you have selected in `plot_custom` in `Logger.py` script.
+- Results and plots will be displayed at the end of the simulation and saved in the path specified in the `plot_custom` function in `Logger.py`.
 
 ---
 
 ## 🧩 Environments
 
-- **RandomPointAviary**: Training environment which is used to teach the agent to reach a random target position.
-- **TestRandomPointAviary**: Test environment for trajectory following or hover at multiple waypoints. You can select `circle`, `square`, `random`, `helix` or `random_and_hover` inside of the script.
+- **RandomPointAviary**: Training environment used to teach the agent to reach a random target position.
+- **TestRandomPointAviary**: Test environment for trajectory following or hovering at multiple waypoints. You can select `circle`, `square`, `random`, `helix`, or `random_and_hover` in the script.
 - **ConstantPerturbation**: Test environment to reject a constant external force.
 - **ImpactPerturbation**: Test environment to reject an impact perturbation.
 
@@ -76,7 +75,7 @@ Each environment is customizable via parameters in the example scripts.
 
 ## 🤖 Trained Agent Policy
 
-The trained agent policy will be included in the `results/name` (`name` has to be the same as you type in `learn.py`) folder as:
+The trained agent policy will be included in the `results/name` folder (`name` must match what you set in `learn.py`):
 
 - `best_model.zip`: Stable Baselines3 PPO agent.
 - `final_model.zip`: Final checkpoint after training.
@@ -84,6 +83,8 @@ The trained agent policy will be included in the `results/name` (`name` has to b
 **Evaluation Results of the Trained Agent Policy (Trajectoryresults):**
 
 Below are visual results (GIFs) of the agent's performance in different trajectory scenarios:
+
+**With TestRandomPointAviary environment**
 
 1. **Random Point Reach**
    
@@ -105,9 +106,20 @@ Below are visual results (GIFs) of the agent's performance in different trajecto
    
    ![Helix Trajectory](gym_pybullet_drones/assets/helixrecgif.gif)
 
+**With ConstantPerturbation environment**
+
+   ![Constant force at some point](gym_pybullet_drones/assets/constatforcerecgif.gif)
+
+**With ImpactPerturbation environment**
+
+   ![Impact at some point](gym_pybullet_drones/assets/impactrecgif.gif)
+
 **How to Use:**
+
 - Place the trained model in `results/name/`.
+- In `evaluation.py`, select the test environment you want: `TestRandomPointAviary`, `ConstantPerturbation`, or `ImpactPerturbation`.
 - Run `evaluation.py` to visualize and analyze performance in the selected environment.
+
 
 ---
 
