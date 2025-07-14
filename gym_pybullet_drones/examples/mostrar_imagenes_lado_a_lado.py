@@ -2,24 +2,23 @@ import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import os
 
-def mostrar_y_guardar_pares_individuales(rutas_imagenes, carpeta_salida, nombre_base="comparacion", figsize=(10, 5)):
+def mostrar_y_guardar_pares_individuales(images_path, output_folder, base_name="comparative", figsize=(10, 5)):
     """
-    Muestra pares de imágenes una al lado de la otra en varias filas y guarda el resultado en un archivo.
-
-    Args:
-        rutas_imagenes (list): Lista de rutas a las imágenes. Debe tener un número par de elementos.
-        carpeta_salida (str): Ruta donde se guardará la imagen combinada.
+    Shows pairs of images side by side in multiple rows and saves the result to a file.
+    Parametes:
+        images_path (list): Lista de rutas a las imágenes. Debe tener un número par de elementos.
+        output_folder (str): Ruta donde se guardará la imagen combinada.
         nombre_salida (str): Nombre del archivo de salida.
         figsize_individual (tuple): Tamaño de cada fila de imágenes.
     """
-    if len(rutas_imagenes) % 2 != 0:
+    if len(images_path) % 2 != 0:
         raise ValueError("La lista de imágenes debe tener un número par de elementos.")
 
-    num_pares = len(rutas_imagenes) // 2
+    num_pares = len(images_path) // 2
 
     for i in range(num_pares):
-        img1 = mpimg.imread(rutas_imagenes[2 * i])
-        img2 = mpimg.imread(rutas_imagenes[2 * i + 1])
+        img1 = mpimg.imread(images_path[2 * i])
+        img2 = mpimg.imread(images_path[2 * i + 1])
 
         fig, axs = plt.subplots(1, 2, figsize=figsize)
         axs[0].imshow(img1, aspect='auto')
@@ -32,8 +31,8 @@ def mostrar_y_guardar_pares_individuales(rutas_imagenes, carpeta_salida, nombre_
 
         plt.tight_layout()
 
-        nombre_archivo = f"{nombre_base}_{i + 1}.png"
-        ruta_guardado = os.path.join(carpeta_salida, nombre_archivo)
+        nombre_archivo = f"{base_name}_{i + 1}.png"
+        ruta_guardado = os.path.join(output_folder, nombre_archivo)
         plt.savefig(ruta_guardado, bbox_inches='tight')
         plt.show()
         plt.close(fig)  # Cierra la figura para liberar memoria
@@ -65,6 +64,6 @@ if __name__ == "__main__":
         rutas.append(ruta_pid)
 
     # Carpeta de salida
-    carpeta_salida = r"C:\Users\pablo\OneDrive\Escritorio\UNI\4CARRERA\RL\ProgresoTFGPython\ExpTrajFinv3\Definitivo\Comparations\RLPIDRectangle\rpm"
+    output_folder = r"C:\Users\pablo\OneDrive\Escritorio\UNI\4CARRERA\RL\ProgresoTFGPython\ExpTrajFinv3\Definitivo\Comparations\RLPIDRectangle\rpm"
 
-    mostrar_y_guardar_pares_individuales(rutas, carpeta_salida)
+    mostrar_y_guardar_pares_individuales(rutas, output_folder)

@@ -1,18 +1,10 @@
-"""Script demonstrating the use of `gym_pybullet_drones`'s Gymnasium interface.
-
-Classes HoverAviary and MultiHoverAviary are used as learning envs for the PPO algorithm.
-
-Example
+"""
+Evaluation script for a trained reinforcement learning model using Stable Baselines3.
+This script evaluates the performance of a trained agent in a Gymnasium environment (TestRandomPointAviary, TestRechazoPertGolpe, TestRechazoPert).
 -------
 In a terminal, run as:
 
-    $ python learn.py --multiagent false
-    $ python learn.py --multiagent true
-
-Notes
------
-This is a minimal working example integrating `gym-pybullet-drones` with 
-reinforcement learning library `stable-baselines3`.
+    $ python evaluation.py
 
 """
 import os
@@ -32,10 +24,9 @@ from stable_baselines3.common.callbacks import EvalCallback, StopTrainingOnRewar
 from stable_baselines3.common.evaluation import evaluate_policy
 
 from gym_pybullet_drones.utils.Logger import Logger
-from gym_pybullet_drones.envs.HoverAviary import HoverAviary
 from gym_pybullet_drones.envs.TestRandomPointAviary import TestRandomPointAviary
-from gym_pybullet_drones.envs.TestRechazoPertGolpe import TestRechazoPertGolpe
-from gym_pybullet_drones.envs.TestRechazoPert import TestRechazoPert
+from gym_pybullet_drones.envs.ImpactPerturbation import ImpactPerturbation
+from gym_pybullet_drones.envs.ConstantPerturbation import ConstantPerturbation
 
 from gym_pybullet_drones.utils.utils import sync, str2bool
 from gym_pybullet_drones.utils.enums import ObservationType, ActionType
@@ -45,17 +36,22 @@ DEFAULT_RECORD_VIDEO = False
 DEFAULT_OUTPUT_FOLDER = 'results'
 DEFAULT_COLAB = False
 
-DEFAULT_OBS = ObservationType('kin') # 'kin' or 'rgb'
-DEFAULT_ACT = ActionType('rpm') # 'rpm' or 'pid' or 'vel' or 'one_d_rpm' or 'one_d_pid'
+DEFAULT_OBS = ObservationType('kin')
+DEFAULT_ACT = ActionType('rpm') 
 DEFAULT_AGENTS = 1
 DEFAULT_MA = False
-ENVIRONMENT = TestRandomPointAviary
-# ENVIRONMENT = TestRechazoPert
-# ENVIRONMENT = TestRechazoPertGolpe
+
+# Test environments for evaluation
+ENVIRONMENT = TestRandomPointAviary # Environment for trajectory evaluation
+# ENVIRONMENT = ConstantPerturbation # Environment for rejection constant perturbation
+# ENVIRONMENT = ImpactPerturbation # Environment for rejection with impact
 
 
 def _draw_target_line(env, drone_pos):
-    """Dibuja (y renueva) una línea roja del dron al objetivo."""
+    """
+    Draws a red line from the drone's position to the target position.    
+    """
+
     p.addUserDebugLine(
         lineFromXYZ=drone_pos,
         lineToXYZ=env.TARGET_POS,
@@ -66,7 +62,9 @@ def _draw_target_line(env, drone_pos):
     )
 
 def _draw_target_text(env):
-    """Texto flotante con las coordenadas del objetivo (una sola vez por reset)."""
+    """
+    Draws a floating text with the target coordinates (once per reset).
+    """
     if hasattr(env, "_text_uid"):
         p.removeUserDebugItem(env._text_uid, physicsClientId=env.CLIENT)
     env._text_uid = p.addUserDebugText(
@@ -80,7 +78,7 @@ def _draw_target_text(env):
 
 def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_GUI, plot=True, colab=DEFAULT_COLAB, record_video=DEFAULT_RECORD_VIDEO, local=True):
 
-    filename = os.path.join(output_folder + '/Trajectoryresultsv8',)
+    filename = os.path.join(output_folder + '/Trajectoryresultsv8',) # Name of the folder where your trained policy have been saved
     if not os.path.exists(filename):
         os.makedirs(filename+'/')
 
@@ -92,6 +90,7 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_
     if local:
         input("Press Enter to continue...")
 
+    # Load the best trained model
     if os.path.isfile(filename+'/best_model.zip'):
        path = filename+'/best_model.zip'
     else:
@@ -102,7 +101,8 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_
     test_env = ENVIRONMENT(gui=gui,
                             obs=DEFAULT_OBS,
                             act=DEFAULT_ACT,
-                            record=record_video)
+                            record=record_video,
+                            trajectory_type="random_and_hover") # Select the type of trajectory to evaluate
     test_env_nogui = ENVIRONMENT(obs=DEFAULT_OBS, act=DEFAULT_ACT)
 
     logger = Logger(logging_freq_hz=int(test_env.CTRL_FREQ),
@@ -119,7 +119,7 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_
 
     obs, info = test_env.reset(seed=42, options={})
     test_env._draw_waypoints()
-    print("Target Position:", test_env.TARGET_POS)  # Imprime la posición objetivo
+    print("Target Position:", test_env.TARGET_POS)  # Prints the target position at the start
 
     start = time.time()
     for i in range((test_env.EPISODE_LEN_SEC+2)*test_env.CTRL_FREQ):
@@ -131,13 +131,14 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_
         obs2 = obs.squeeze()
         
         ############################
-        drone_xyz = obs2[0:3]           # (x,y,z) del dron en este paso
+        drone_xyz = obs2[0:3]           # (x,y,z) of the drone at this step
         _draw_target_line(test_env, drone_xyz)
         ############################
+        # To centralize the camera on the drone
         p.resetDebugVisualizerCamera(
-            cameraDistance=2.5,           # Distancia de la cámara al dron
-            cameraYaw=45,                 # Ángulo horizontal
-            cameraPitch=-30,              # Ángulo vertical
+            cameraDistance=2.5,           # Distance from the camera to the drone
+            cameraYaw=45,                 # Horizontal angle
+            cameraPitch=-30,              # Vertical angle
             cameraTargetPosition=drone_xyz,
             physicsClientId=test_env.CLIENT
         )
@@ -161,56 +162,22 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_
         if terminated:
             obs, _ = test_env.reset(seed=42, options={})
             _draw_target_text(test_env)
-            print("Target Position:", test_env.TARGET_POS)  # Imprime la posición objetivo al reiniciar
+            print("Target Position:", test_env.TARGET_POS)  # Prints the target position at reset
 
     test_env.close()
     if hasattr(test_env, "reached_errors") and len(test_env.reached_errors) > 0:
         errors = np.array(test_env.reached_errors)
-        print(f"\n[RESULTADO] Precisión al llegar a los puntos:")
-        print(f"  - Error medio: {errors.mean():.4f} m")
-        print(f"  - Error máximo: {errors.max():.4f} m")
-        print(f"  - Error mínimo: {errors.min():.4f} m")
+        print(f"\n[RESULT] Precision at reaching waypoints:")
+        print(f"  - Mean error: {errors.mean():.4f} m")
+        print(f"  - Max error: {errors.max():.4f} m")
+        print(f"  - Min error: {errors.min():.4f} m")
     else:
-        print("\n[RESULTADO] No se registraron llegadas a waypoints.")
-    #############################################################
-    # Validación: comprobar que el agente alcanza los 216 puntos del grid
-    
-    # grid = np.arange(0.5, 3.1, 0.5)
-    # targets = np.array(list(itertools.product(grid, grid, grid)), dtype=np.float32)
+        print("\n[RESULT] No waypoint arrivals were recorded.")
 
-    # print("\n[VALIDACIÓN] Comprobando que el agente alcanza los 216 puntos…")
-    # successes = 0
-
-    # val_env = RandomPointAviary(obs=DEFAULT_OBS, act=DEFAULT_ACT)   # sin GUI
-    # max_steps = int(20 * val_env.CTRL_FREQ)      # 20 s de margen por punto
-
-    # for tgt in targets:
-    #     obs, _ = val_env.reset()
-    #     val_env.TARGET_POS = tgt
-    #     # Si existe el marcador, lo recolocamos (inútil sin GUI, pero por si acaso)
-    #     if hasattr(val_env, "_update_target_marker"):
-    #         val_env._update_target_marker()
-
-    #     for _ in range(max_steps):
-    #         action, _ = model.predict(obs, deterministic=True)
-    #         obs, _, terminated, _, _ = val_env.step(action)
-    #         if terminated:
-    #             successes += 1
-    #             break
-
-    # val_env.close()
-    # print(f"\nResultado: {successes}/216 puntos alcanzados "
-    #     f"({successes/216:.1%} de éxito)\n")
-
-    ################################################
-    if hasattr(test_env, "get_position_match_percentage"):
-        match_pct = test_env.get_position_match_percentage(tolerance=0.0)
-        print(f"[RESULTADO] Porcentaje de coincidencia posición-medida (tolerancia 0.1 m): {match_pct:.2f}%")
-
-
+    # Shows drone's states
     if plot and DEFAULT_OBS == ObservationType.KIN:
-        # logger.plot(reference=test_env.WAYPOINTS)
         logger.plot_custom(reference=test_env.WAYPOINTS)
+
 if __name__ == '__main__':
     #### Define and parse (optional) arguments for the script ##
     parser = argparse.ArgumentParser(description='Single agent reinforcement learning example script')

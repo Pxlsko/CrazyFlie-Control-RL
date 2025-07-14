@@ -124,7 +124,7 @@ class Logger(object):
         #### Re-order the kinematic obs (of most Aviaries) #########
         self.states[drone, :, current_counter] = np.hstack([state[0:3], state[10:13], state[7:10], state[13:20]])
         self.controls[drone, :, current_counter] = control
-        self.targets[drone, :, current_counter] = target_pos # NUEVO: Registrar la posición objetivo
+        self.targets[drone, :, current_counter] = target_pos # NUEVO: Registrar la Position objetivo
         self.counters[drone] = current_counter + 1
 
     ################################################################################
@@ -414,116 +414,109 @@ class Logger(object):
         
     def plot_custom(self, reference=None):
         t = np.arange(0, self.timestamps.shape[1]/self.LOGGING_FREQ_HZ, 1/self.LOGGING_FREQ_HZ)
-        drone = 0  # Solo el primer dron
+        drone = 0
 
-        # Las variables ref_x, ref_y, ref_z y la lógica de interpolación ya no son necesarias
-        # para graficar la "posición deseada" si se usa self.targets.
-        # Se elimina esta sección para evitar duplicidad y confusión.
-        save_path = r"C:\Users\pablo\OneDrive\Escritorio\UNI\4CARRERA\RL\ProgresoTFGPython\ExpTrajFinv3\Definitivo\PID\Helicoidal"
+        save_path = r"C:\Users\pablo\OneDrive\Escritorio\UNI\4CARRERA\RL\ProgresoTFGPython\ExpTrajFinv3\Definitivo\PID\Helicoidal" # Path to save the plots
         os.makedirs(save_path, exist_ok=True)
 
-        # 1. Posición
+        # 1. Position
         fig1, axs1 = plt.subplots(3, 1, figsize=(8, 8), sharex=True)
         
-        # Plot para x
-        axs1[0].plot(t, self.states[drone, 0, :], 'r-', label="x medida")
-        # Gráfica la posición deseada directamente desde self.targets con estilo de pasos
-        axs1[0].plot(t, self.targets[drone, 0, :], 'b--', label="x deseada", drawstyle='steps-post')
+        # X position
+        axs1[0].plot(t, self.states[drone, 0, :], 'r-', label="x measured")
+        axs1[0].plot(t, self.targets[drone, 0, :], 'b--', label="x desired", drawstyle='steps-post')
         axs1[0].set_ylabel('x (m)')
         axs1[0].legend()
         axs1[0].grid(True)
-        
-        # Plot para y
-        axs1[1].plot(t, self.states[drone, 1, :], 'r-', label="y medida")
-        # Gráfica la posición deseada directamente desde self.targets con estilo de pasos
-        axs1[1].plot(t, self.targets[drone, 1, :], 'b--', label="y deseada", drawstyle='steps-post')
+
+        # Y position
+        axs1[1].plot(t, self.states[drone, 1, :], 'r-', label="y measured")
+        axs1[1].plot(t, self.targets[drone, 1, :], 'b--', label="y desired", drawstyle='steps-post')
         axs1[1].set_ylabel('y (m)')
         axs1[1].legend()
         axs1[1].grid(True)
-        
-        # Plot para z
-        axs1[2].plot(t, self.states[drone, 2, :], 'r-', label="z medida")
-        # Gráfica la posición deseada directamente desde self.targets con estilo de pasos
-        axs1[2].plot(t, self.targets[drone, 2, :], 'b--', label="z deseada", drawstyle='steps-post')
+
+        # Z position
+        axs1[2].plot(t, self.states[drone, 2, :], 'r-', label="z measured")
+        axs1[2].plot(t, self.targets[drone, 2, :], 'b--', label="z desired", drawstyle='steps-post')
         axs1[2].set_ylabel('z (m)')
         axs1[2].set_xlabel('time (s)')
         axs1[2].legend()
         axs1[2].grid(True)
         
-        fig1.suptitle('Posición deseada vs medida')
-        # Ajuste del margen inferior para asegurar que el label del eje X no se corte
+        fig1.suptitle('Desired vs Measured Position')
         plt.tight_layout(rect=[0, 0.05, 1, 0.96])
-        fig1.savefig(os.path.join(save_path, "posicion_deseada_vs_medida.png"))
+        fig1.savefig(os.path.join(save_path, "desired_vs_measured_position.png"))
 
 
-        # 2. Orientación
+        # 2. Orientation
         fig2, axs2 = plt.subplots(3, 1, figsize=(8, 8), sharex=True)
-        axs2[0].plot(t, self.states[drone, 6, :], 'r-', label="roll medido")
-        axs2[0].axhline(0, color='b', linestyle='--', label="roll deseado") # Asumiendo 0 como referencia
+        axs2[0].plot(t, self.states[drone, 6, :], 'r-', label="roll measured")
+        axs2[0].axhline(0, color='b', linestyle='--', label="roll desired") 
         axs2[0].set_ylabel('roll (rad)')
         axs2[0].legend()
         axs2[0].grid(True)
-        axs2[1].plot(t, self.states[drone, 7, :], 'r-', label="pitch medido")
-        axs2[1].axhline(0, color='b', linestyle='--', label="pitch deseado") # Asumiendo 0 como referencia
+        axs2[1].plot(t, self.states[drone, 7, :], 'r-', label="pitch measured")
+        axs2[1].axhline(0, color='b', linestyle='--', label="pitch desired")
         axs2[1].set_ylabel('pitch (rad)')
         axs2[1].legend()
         axs2[1].grid(True)
-        axs2[2].plot(t, self.states[drone, 8, :], 'r-', label="yaw medido")
-        axs2[2].axhline(0, color='b', linestyle='--', label="yaw deseada") # Asumiendo 0 como referencia
+        axs2[2].plot(t, self.states[drone, 8, :], 'r-', label="yaw measured")
+        axs2[2].axhline(0, color='b', linestyle='--', label="yaw desired") 
         axs2[2].set_ylabel('yaw (rad)')
         axs2[2].set_xlabel('time (s)')
         axs2[2].legend()
         axs2[2].grid(True)
-        fig2.suptitle('Orientación deseada vs medida')
+        fig2.suptitle('Desired vs Measured Orientation')
         plt.tight_layout(rect=[0, 0.05, 1, 0.96])
-        fig2.savefig(os.path.join(save_path, "orientacion_deseada_vs_medida.png"))
+        fig2.savefig(os.path.join(save_path, "desired_vs_measured_orientation.png"))
 
-        # 3. Velocidad lineal
+        # 3. Linear velocity
         fig3, axs3 = plt.subplots(3, 1, figsize=(8, 8), sharex=True)
-        axs3[0].plot(t, self.states[drone, 3, :], 'r-', label="vx medido")
-        axs3[0].axhline(0, color='b', linestyle='--', label="vx deseado") # Asumiendo 0 como referencia
+        axs3[0].plot(t, self.states[drone, 3, :], 'r-', label="vx measured")
+        axs3[0].axhline(0, color='b', linestyle='--', label="vx desired") 
         axs3[0].set_ylabel('vx (m/s)')
         axs3[0].legend()
         axs3[0].grid(True)
-        axs3[1].plot(t, self.states[drone, 4, :], 'r-', label="vy medido")
-        axs3[1].axhline(0, color='b', linestyle='--', label="vy deseado") # Asumiendo 0 como referencia
+        axs3[1].plot(t, self.states[drone, 4, :], 'r-', label="vy measured")
+        axs3[1].axhline(0, color='b', linestyle='--', label="vy desired")
         axs3[1].set_ylabel('vy (m/s)')
         axs3[1].legend()
         axs3[1].grid(True)
-        axs3[2].plot(t, self.states[drone, 5, :], 'r-', label="vz medido")
-        axs3[2].axhline(0, color='b', linestyle='--', label="vz deseado") # Asumiendo 0 como referencia
+        axs3[2].plot(t, self.states[drone, 5, :], 'r-', label="vz measured")
+        axs3[2].axhline(0, color='b', linestyle='--', label="vz desired")
         axs3[2].set_ylabel('vz (m/s)')
         axs3[2].set_xlabel('time (s)')
         axs3[2].legend()
         axs3[2].grid(True)
-        fig3.suptitle('Velocidad lineal deseada vs medida')
+        fig3.suptitle('Desired vs Measured Linear Velocity')
         plt.tight_layout(rect=[0, 0.05, 1, 0.96])
-        fig3.savefig(os.path.join(save_path, "velocidad_lineal_deseada_vs_medida.png"))
+        fig3.savefig(os.path.join(save_path, "desired_vs_measured_linear_velocity.png"))
 
-        # 4. Velocidad angular
+        # 4. Angular velocity 
         fig4, axs4 = plt.subplots(3, 1, figsize=(8, 8), sharex=True)
-        axs4[0].plot(t, self.states[drone, 9, :], 'r-', label="wx medido")
-        axs4[0].axhline(0, color='b', linestyle='--', label="wx deseado") # Asumiendo 0 como referencia
+        axs4[0].plot(t, self.states[drone, 9, :], 'r-', label="wx measured")
+        axs4[0].axhline(0, color='b', linestyle='--', label="wx desired")
         axs4[0].set_ylabel('wx (rad/s)')
         axs4[0].legend()
         axs4[0].grid(True)
-        axs4[1].plot(t, self.states[drone, 10, :], 'r-', label="wy medido")
-        axs4[1].axhline(0, color='b', linestyle='--', label="wy deseado") # Asumiendo 0 como referencia
+        axs4[1].plot(t, self.states[drone, 10, :], 'r-', label="wy measured")
+        axs4[1].axhline(0, color='b', linestyle='--', label="wy desired") 
         axs4[1].set_ylabel('wy (rad/s)')
         axs4[1].legend()
         axs4[1].grid(True)
-        axs4[2].plot(t, self.states[drone, 11, :], 'r-', label="wz medido")
-        axs4[2].axhline(0, color='b', linestyle='--', label="wz deseado") # Asumiendo 0 como referencia
+        axs4[2].plot(t, self.states[drone, 11, :], 'r-', label="wz measured")
+        axs4[2].axhline(0, color='b', linestyle='--', label="wz desired")
         axs4[2].set_ylabel('wz (rad/s)')
         axs4[2].set_xlabel('time (s)')
         axs4[2].legend()
         axs4[2].grid(True)
-        fig4.suptitle('Velocidad angular deseada vs medida')
+        fig4.suptitle('Desired vs Measured Angular Velocity')
         plt.tight_layout(rect=[0, 0.05, 1, 0.96])
-        fig4.savefig(os.path.join(save_path, "velocidad_angular_deseada_vs_medida.png"))
+        fig4.savefig(os.path.join(save_path, "desired_vs_measured_angular_velocity.png"))
 
 
-        # # 5. RPMs
+        # # 5. RPMs without filtering
         # fig5, axs5 = plt.subplots(4, 1, figsize=(10, 8), sharex=True)
         # rpm_labels = ['RPM0', 'RPM1', 'RPM2', 'RPM3']
         # for i in range(4):
@@ -532,10 +525,10 @@ class Logger(object):
         #     axs5[i].legend()
         #     axs5[i].grid(True)
         # axs5[-1].set_xlabel('time (s)')
-        # fig5.suptitle('RPM de los 4 motores')
+        # fig5.suptitle('Motor\'s RPM')
         # plt.tight_layout(rect=[0, 0.05, 1, 0.96])
 
-        
+        # Butterworth low-pass filter function
         def butter_lowpass_filter(data, cutoff, fs, order=4):
                 nyq = 0.5 * fs  # Frecuencia de Nyquist
                 normal_cutoff = cutoff / nyq
@@ -543,116 +536,116 @@ class Logger(object):
                 y = filtfilt(b, a, data)
                 return y
         
-        # 5. RPMs con filtro pasa-bajas
+        # 5. RPMs filtered
         fig5, axs5 = plt.subplots(4, 1, figsize=(10, 8), sharex=True)
         rpm_labels = ['RPM0', 'RPM1', 'RPM2', 'RPM3']
 
-        # Parámetros del filtro
-        cutoff = 5.0  # Hz, puedes ajustar esto para más o menos suavizado
-        fs = self.LOGGING_FREQ_HZ  # Frecuencia de muestreo
+        # Filter parameters
+        cutoff = 5.0  # Hz
+        fs = self.LOGGING_FREQ_HZ  # Sample frequency
 
         for i in range(4):
             raw_rpm = self.states[drone, 12+i, :]
             filtered_rpm = butter_lowpass_filter(raw_rpm, cutoff, fs)
-            
-            axs5[i].plot(t, raw_rpm, label=f"{rpm_labels[i]} (sin filtrar)", color='lightcoral', alpha=0.5)
-            axs5[i].plot(t, filtered_rpm, label=f"{rpm_labels[i]} (filtrado)", color='red')
+
+            axs5[i].plot(t, raw_rpm, label=f"{rpm_labels[i]} (no filtered)", color='lightcoral', alpha=0.5)
+            axs5[i].plot(t, filtered_rpm, label=f"{rpm_labels[i]} (filtered)", color='red')
             axs5[i].set_ylabel(rpm_labels[i])
             axs5[i].legend()
             axs5[i].grid(True)
 
         axs5[-1].set_xlabel('time (s)')
-        fig5.suptitle('RPM de los 4 motores')
+        fig5.suptitle('Motor\'s RPM')
         plt.tight_layout(rect=[0, 0.05, 1, 0.96])
-        fig5.savefig(os.path.join(save_path, "RPM_filtrado.png"))
+        fig5.savefig(os.path.join(save_path, "RPM_filtered.png"))
 
         v_labels = ['vx', 'vy', 'vz']
         w_labels = ['wx', 'wy', 'wz']
 
-        # === Figura 6: Velocidad lineal y angular sin filtrar ===
+        # 6. Linear and angular velocity without filtering
         fig6, axs6 = plt.subplots(3, 2, figsize=(12, 8), sharex=True)
         for i in range(3):
-            axs6[i, 0].plot(t, self.states[drone, 3 + i, :], label=f"{v_labels[i]} medido", color='red')
-            axs6[i, 0].axhline(0, color='b', linestyle='--', label=f"{v_labels[i]} deseado")
+            axs6[i, 0].plot(t, self.states[drone, 3 + i, :], label=f"{v_labels[i]} measured", color='red')
+            axs6[i, 0].axhline(0, color='b', linestyle='--', label=f"{v_labels[i]} desired")
             axs6[i, 0].set_ylabel(f"{v_labels[i]} (m/s)")
             axs6[i, 0].legend()
             axs6[i, 0].grid(True)
 
-            axs6[i, 1].plot(t, self.states[drone, 9 + i, :], label=f"{w_labels[i]} medido", color='red')
-            axs6[i, 1].axhline(0, color='b', linestyle='--', label=f"{w_labels[i]} deseado")
+            axs6[i, 1].plot(t, self.states[drone, 9 + i, :], label=f"{w_labels[i]} measured", color='red')
+            axs6[i, 1].axhline(0, color='b', linestyle='--', label=f"{w_labels[i]} desired")
             axs6[i, 1].set_ylabel(f"{w_labels[i]} (rad/s)")
             axs6[i, 1].legend()
             axs6[i, 1].grid(True)
 
         axs6[2, 0].set_xlabel("time (s)")
         axs6[2, 1].set_xlabel("time (s)")
-        fig6.suptitle("Velocidad lineal y angular deseada vs medida")
+        fig6.suptitle("Desired vs Measured Linear and Angular Velocity")
         plt.tight_layout(rect=[0, 0.05, 1, 0.96])
-        fig6.savefig(os.path.join(save_path, "velocidad_lineal_y_angular_deseada_vs_medida.png"))
+        fig6.savefig(os.path.join(save_path, "desired_vs_measured_linear_and_angular_velocity.png"))
 
-        # === Figura 7: Velocidad angular filtrada ===
+        # 7. Angular velocity filtered
         fig7, axs7 = plt.subplots(3, 1, figsize=(10, 8), sharex=True)
         for i in range(3):
             w_raw = self.states[drone, 9 + i, :]
             w_filt = butter_lowpass_filter(w_raw, cutoff, fs)
             axs7[i].plot(t, w_raw, label=f"{w_labels[i]} sin filtrar", color='gray', alpha=0.5)
             axs7[i].plot(t, w_filt, label=f"{w_labels[i]} filtrado", color='red')
-            axs7[i].axhline(0, color='b', linestyle='--', label=f"{w_labels[i]} deseado")
+            axs7[i].axhline(0, color='b', linestyle='--', label=f"{w_labels[i]} desired")
             axs7[i].set_ylabel(f"{w_labels[i]} (rad/s)")
             axs7[i].legend()
             axs7[i].grid(True)
         axs7[2].set_xlabel("time (s)")
-        fig7.suptitle("Velocidad angular deseada vs medida")
+        fig7.suptitle("Desired vs Measured Angular Velocity")
         plt.tight_layout(rect=[0, 0.05, 1, 0.96])
-        fig7.savefig(os.path.join(save_path, "velocidad_angular_deseada_vs_medidafiltrada.png"))
+        fig7.savefig(os.path.join(save_path, "desired_vs_measured_angular_velocity_filtered.png"))
 
-        # === Figura 8: Velocidad lineal y angular (ambas filtradas) ===
+        # 8. Linear and angular velocity (both filtered)
         fig8, axs8 = plt.subplots(3, 2, figsize=(12, 8), sharex=True)
         for i in range(3):
             v_raw = self.states[drone, 3 + i, :]
             v_filt = butter_lowpass_filter(v_raw, cutoff, fs)
-            axs8[i, 0].plot(t, v_filt, label=f"{v_labels[i]} filtrado", color='red')
-            axs8[i, 0].axhline(0, color='b', linestyle='--', label=f"{v_labels[i]} deseado")
+            axs8[i, 0].plot(t, v_filt, label=f"{v_labels[i]} filtered", color='red')
+            axs8[i, 0].axhline(0, color='b', linestyle='--', label=f"{v_labels[i]} desired")
             axs8[i, 0].set_ylabel(f"{v_labels[i]} (m/s)")
             axs8[i, 0].legend()
             axs8[i, 0].grid(True)
 
             w_raw = self.states[drone, 9 + i, :]
             w_filt = butter_lowpass_filter(w_raw, cutoff, fs)
-            axs8[i, 1].plot(t, w_filt, label=f"{w_labels[i]} filtrado", color='red')
-            axs8[i, 1].axhline(0, color='b', linestyle='--', label=f"{w_labels[i]} deseado")
+            axs8[i, 1].plot(t, w_filt, label=f"{w_labels[i]} filtered", color='red')
+            axs8[i, 1].axhline(0, color='b', linestyle='--', label=f"{w_labels[i]} desired")
             axs8[i, 1].set_ylabel(f"{w_labels[i]} (rad/s)")
             axs8[i, 1].legend()
             axs8[i, 1].grid(True)
 
         axs8[2, 0].set_xlabel("time (s)")
         axs8[2, 1].set_xlabel("time (s)")
-        fig8.suptitle("Velocidad lineal y angular deseada vs medida")
+        fig8.suptitle("Desired vs Measured Linear and Angular Velocity")
         plt.tight_layout(rect=[0, 0.05, 1, 0.96])
-        fig8.savefig(os.path.join(save_path, "velocidad_lineal_y_angular_medida_vs_deseadafiltradas.png"))
+        fig8.savefig(os.path.join(save_path, "desired_vs_measured_linear_and_angular_velocity_filtered.png"))
 
-        # === Figura 9: Velocidad lineal (sin filtrar) y angular (filtrada) ===
+        # 9. Linear velocity (unfiltered) and angular velocity (filtered)
         fig9, axs9 = plt.subplots(3, 2, figsize=(12, 8), sharex=True)
         for i in range(3):
             v_raw = self.states[drone, 3 + i, :]
-            axs9[i, 0].plot(t, v_raw, label=f"{v_labels[i]} medido", color='red')
-            axs9[i, 0].axhline(0, color='b', linestyle='--', label=f"{v_labels[i]} deseado")
+            axs9[i, 0].plot(t, v_raw, label=f"{v_labels[i]} measured", color='red')
+            axs9[i, 0].axhline(0, color='b', linestyle='--', label=f"{v_labels[i]} desired")
             axs9[i, 0].set_ylabel(f"{v_labels[i]} (m/s)")
             axs9[i, 0].legend()
             axs9[i, 0].grid(True)
 
             w_raw = self.states[drone, 9 + i, :]
             w_filt = butter_lowpass_filter(w_raw, cutoff, fs)
-            axs9[i, 1].plot(t, w_filt, label=f"{w_labels[i]} filtrado", color='red')
-            axs9[i, 1].axhline(0, color='b', linestyle='--', label=f"{w_labels[i]} deseado")
+            axs9[i, 1].plot(t, w_filt, label=f"{w_labels[i]} filtered", color='red')
+            axs9[i, 1].axhline(0, color='b', linestyle='--', label=f"{w_labels[i]} desired")
             axs9[i, 1].set_ylabel(f"{w_labels[i]} (rad/s)")
             axs9[i, 1].legend()
             axs9[i, 1].grid(True)
 
         axs9[2, 0].set_xlabel("time (s)")
         axs9[2, 1].set_xlabel("time (s)")
-        fig9.suptitle("Velocidad lineal y angular deseada vs medida")
+        fig9.suptitle("Desired vs Measured Linear and Angular Velocity")
         plt.tight_layout(rect=[0, 0.05, 1, 0.96])
-        fig9.savefig(os.path.join(save_path, "velocidad_linealsinfiltra_y_angularfiltrada_deseada_vs_medida.png"))
+        fig9.savefig(os.path.join(save_path, "desired_vs_measured_linear_and_angular_velocity.png"))
 
         plt.show()

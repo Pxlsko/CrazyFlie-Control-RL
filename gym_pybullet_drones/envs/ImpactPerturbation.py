@@ -2,16 +2,20 @@ from turtle import distance
 import numpy as np
 import pybullet as p
 from gymnasium import spaces   
-import itertools                                       
+import itertools                                         
+from scipy.interpolate import CubicSpline
 
 from gym_pybullet_drones.envs.BaseRLAviary import BaseRLAviary
 from gym_pybullet_drones.utils.enums import DroneModel, Physics, ActionType, ObservationType
 
-class RandomPointAviary(BaseRLAviary):
-    '''Single agent RL problem: hover at position.'''
+class ImpactPerturbation(BaseRLAviary):
+    '''
+    Test environment for RandomPointAviary policy with impact perturbation.
 
-    ################################################################################
-
+    In this environment at some point in the episode an impact perturbation is applied
+    to the drone, which is expected to reject it and return to the target position.
+    '''
+        
     def __init__(self,
                  drone_model: DroneModel=DroneModel.CF2X,
                  initial_xyzs=None,
@@ -22,40 +26,19 @@ class RandomPointAviary(BaseRLAviary):
                  gui=False,
                  record=False,
                  obs: ObservationType=ObservationType.KIN,
-                 act: ActionType=ActionType.RPM
+                 act: ActionType=ActionType.RPM,
+                 trajectory_type: str = "random" 
                  ):
-        '''
-        Initialization of a single agent RL environment.
-
-        Using the generic single agent RL superclass.
-
-        Parameters
-        ----------
-        drone_model : DroneModel, optional
-            The desired drone type (detailed in an .urdf file in folder `assets`).
-        initial_xyzs: ndarray | None, optional
-            (NUM_DRONES, 3)-shaped array containing the initial XYZ position of the drones.
-        initial_rpys: ndarray | None, optional
-            (NUM_DRONES, 3)-shaped array containing the initial orientations of the drones (in radians).
-        physics : Physics, optional
-            The desired implementation of PyBullet physics/custom dynamics.
-        pyb_freq : int, optional
-            The frequency at which PyBullet steps (a multiple of ctrl_freq).
-        ctrl_freq : int, optional
-            The frequency at which the environment steps.
-        gui : bool, optional
-            Whether to use PyBullet's GUI.
-        record : bool, optional
-            Whether to save a video of the simulation.
-        obs : ObservationType, optional
-            The type of observation space (kinematic information or vision)
-        act : ActionType, optional
-            The type of action space (1 or 3D; RPMS, thurst and torques, or waypoint with PID control)
-
-        '''
-        self.TARGET_POS = self._sample_grid_point()   # Random point in the grid       
-        self.EPISODE_LEN_SEC = 25 # Maximum episode length in seconds
-
+        self.NUM_WAYPOINTS = 1
+        self.RADIUS = 1.0
+        self.CENTER = np.array([1.5, 1.5, 1.5])
+        self.trajectory_type = trajectory_type
+        self.WAYPOINTS = self._generate_random_waypoints(self.CENTER, self.RADIUS, self.NUM_WAYPOINTS)
+        self.current_target_idx = 0
+        self.TARGET_POS = self.WAYPOINTS[self.current_target_idx]
+        self.EPISODE_LEN_SEC = 20
+        self.reached_errors = []
+  
         super().__init__(drone_model=drone_model,
                          num_drones=1,
                          initial_xyzs=initial_xyzs,
@@ -68,22 +51,42 @@ class RandomPointAviary(BaseRLAviary):
                          obs=obs,
                          act=act
                          )
-
-    def _sample_grid_point(self):
-
+        
+        # Perturbation parameters
+        self.perturbation_applied = False
+        self.PERTURBATION_FORCE_MAGNITUDE = np.array([0.0, 0.0, 6.5])  # Perturbation force
+        self.PERTURBATION_TIME_SEC = 10.0 # Time in seconds to apply the perturbation
+        self.perturbation_trigger_step = int(self.PERTURBATION_TIME_SEC * pyb_freq)
+    
+    def _generate_random_waypoints(self, center, radius, num_points):
         '''
-        Returns random XYZ in the grid 0.5 – 3 m.
-        The grid is defined as a 0.1 m spaced grid in the range [0.5, 3.0] m.
+        Generates random points within a cube centered at center.
+
+        Parameters:
+        - center: Center of the cube.
+        - radius: Half the side length of the cube.
+        - num_points: Number of random points to generate.
         '''
-            
-        GRID = np.arange(0.5, 3.1, 0.1)                          
-        return np.array([np.random.choice(GRID) for _ in range(3)], dtype=np.float32)
+        waypoints = []
+        for _ in range(num_points):
+            point = center + np.random.uniform(-radius, radius, size=3)
+            waypoints.append(np.round(point, 2))
+        return waypoints
+    
+    def reset(self, seed=None, options=None):
+        '''
+        Resets the environment to its initial state.
+        '''
+        self.current_target_idx = 0
+        self.TARGET_POS = self.WAYPOINTS[self.current_target_idx]
+        self.reached_errors = []
+        self.perturbation_applied = False  # Reiniciar la bandera de perturbación
+        return super().reset(seed=seed, options=options)
     
     def _observationSpace(self):
         '''
         Defines the observation space of the environment.
         '''
-
         parent = super()._observationSpace()
         low  = np.hstack([parent.low[0],  [-np.inf]*3])
         high = np.hstack([parent.high[0], [ np.inf]*3])
@@ -91,11 +94,10 @@ class RandomPointAviary(BaseRLAviary):
         high = np.tile(high, (self.NUM_DRONES, 1))
         return spaces.Box(low=low, high=high, dtype=np.float32)
 
-    def _computeObs(self):
+    def _computeObs(self):        
         '''
         Adds to observation the distance to the target position.
         '''
-
         kin   = super()._computeObs()[0]
         delta = self.TARGET_POS - self._getDroneStateVector(0)[0:3]
         return np.hstack([kin, delta]).reshape(1, -1).astype('float32')
@@ -175,26 +177,32 @@ class RandomPointAviary(BaseRLAviary):
         return total_r
 
     ################################################################################
-    
     def _computeTerminated(self):
-        '''Computes the current done value.
-
-        Returns
-        -------
-        bool
-            Whether the current episode is done.
-
-        '''
-
-        # Check if the drone is close enough to the target position and has low velocity
         state = self._getDroneStateVector(0)
-        if np.linalg.norm(self.TARGET_POS - state[0:3]) < 0.05  and np.linalg.norm(state[10:13]) < 0.1:  
-            print(f"[INFO] Target Reached: {self.TARGET_POS}")
-            return True    
-        
+        pos_error = np.linalg.norm(self.TARGET_POS - state[0:3])
+
+        # Perturbation initialization:
+        if not self.perturbation_applied and self.step_counter >= self.perturbation_trigger_step:
+            print(f"[INFO] Aplicando GOLPE al dron a los {self.PERTURBATION_TIME_SEC} segundos!")
+            self.perturbation_applied = True
+            p.applyExternalForce(self.DRONE_IDS[0], 
+                                 -1,
+                                 self.PERTURBATION_FORCE_MAGNITUDE, 
+                                 state[0:3], 
+                                 p.WORLD_FRAME, 
+                                 physicsClientId=self.CLIENT)
+        # Check if the drone is close enough to the target position
+        if pos_error < 0.1:
+            print(f"[INFO] Target reached {self.current_target_idx}: {self.TARGET_POS}")
+            self.reached_errors.append(pos_error)
+            
+            if self.current_target_idx < len(self.WAYPOINTS) - 1:
+                self.current_target_idx += 1
+                self.TARGET_POS = self.WAYPOINTS[self.current_target_idx]
+            return False 
         # Check if the drone is out of bounds or crashed
-        elif (abs(state[0]) > 3.5 or abs(state[1]) > 3.5 or state[2] > 3.5 or  
-            abs(state[7]) > 0.6 or abs(state[8]) > 0.6 or state[2] <= 0.075):
+        elif (abs(state[0]) > 3.5 or abs(state[1]) > 3.5 or state[2] > 3.5 or
+              abs(state[7]) > 0.6 or abs(state[8]) > 0.6 or state[2] <= 0.075):
             return True
         else:
             return False
@@ -202,15 +210,14 @@ class RandomPointAviary(BaseRLAviary):
     ################################################################################
     
     def _computeTruncated(self):
-        '''Computes the current truncated value.
+        """Computes the current truncated value.
 
         Returns
         -------
         bool
             Whether the current episode timed out.
 
-        '''
-
+        """
         # Check if the episode has timed out
         if self.step_counter/self.PYB_FREQ > self.EPISODE_LEN_SEC:
             return True
@@ -220,7 +227,7 @@ class RandomPointAviary(BaseRLAviary):
     ################################################################################
     
     def _computeInfo(self):
-        '''Computes the current info dict(s).
+        """Computes the current info dict(s).
 
         Unused.
 
@@ -229,7 +236,6 @@ class RandomPointAviary(BaseRLAviary):
         dict[str, int]
             Dummy value.
 
-        '''
+        """
     
         return {"answer": 42} #### Calculated by the Deep Thought supercomputer in 7.5M years
-    
