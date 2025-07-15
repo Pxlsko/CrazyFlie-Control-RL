@@ -416,7 +416,7 @@ class Logger(object):
         t = np.arange(0, self.timestamps.shape[1]/self.LOGGING_FREQ_HZ, 1/self.LOGGING_FREQ_HZ)
         drone = 0
 
-        save_path = r"C:\Users\pablo\OneDrive\Escritorio\UNI\4CARRERA\RL\ProgresoTFGPython\ExpTrajFinv3\Definitivo\PID\Helicoidal" # Path to save the plots
+        save_path = r"path/to/save/plots" # Path to save the plots
         os.makedirs(save_path, exist_ok=True)
 
         # 1. Position
